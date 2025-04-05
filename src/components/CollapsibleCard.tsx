@@ -6,13 +6,26 @@ import { InvoiceSummary } from '../data/invoiceData';
 
 interface CollapsibleCardProps {
   data: InvoiceSummary;
+  allDescriptions: string[];
 }
 
-const CollapsibleCard: React.FC<CollapsibleCardProps> = ({ data }) => {
+const CollapsibleCard: React.FC<CollapsibleCardProps> = ({ data, allDescriptions }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
+  };
+
+  // Function to find the amount for a specific description
+  const getValueForDescription = (description: string) => {
+    // If it's the total row
+    if (description === "Total") {
+      return formatCurrency(data.total);
+    }
+    
+    // Find the detail with the matching title
+    const detail = data.details.find(d => d.title === description);
+    return detail ? formatCurrency(detail.total) : "-";
   };
 
   return (
@@ -40,40 +53,16 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({ data }) => {
         }`}
       >
         <div className="bg-white p-3">
-          <table className="w-full text-xs">
-            <thead className="border-b border-gray-200">
-              <tr>
-                <th className="text-left font-medium text-gray-600 py-2">Description</th>
-                <th className="text-right font-medium text-gray-600 py-2">Amount</th>
-                <th className="text-right font-medium text-gray-600 py-2">GST</th>
-                <th className="text-right font-medium text-gray-600 py-2">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.details.map((detail, index) => (
-                <tr key={index} className={index < data.details.length - 1 ? "border-b border-gray-100" : ""}>
-                  <td className="py-2 text-gray-800">{detail.title}</td>
-                  <td className="py-2 text-right text-gray-800">{formatCurrency(detail.amount)}</td>
-                  <td className="py-2 text-right text-gray-800">{formatCurrency(detail.gst)}</td>
-                  <td className="py-2 text-right font-medium text-gray-800">{formatCurrency(detail.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot className="border-t border-gray-200">
-              <tr>
-                <td className="py-2 font-semibold text-gray-800">Total</td>
-                <td className="py-2 text-right font-semibold text-gray-800">
-                  {formatCurrency(data.details.reduce((sum, detail) => sum + detail.amount, 0))}
-                </td>
-                <td className="py-2 text-right font-semibold text-gray-800">
-                  {formatCurrency(data.details.reduce((sum, detail) => sum + detail.gst, 0))}
-                </td>
-                <td className="py-2 text-right font-semibold text-gray-800">
-                  {formatCurrency(data.total)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+          {allDescriptions.map((description, index) => (
+            <div 
+              key={index} 
+              className={`py-2 text-right text-xs ${
+                index === allDescriptions.length - 1 ? 'mt-2 border-t border-gray-200 pt-3 font-semibold' : ''
+              }`}
+            >
+              {getValueForDescription(description)}
+            </div>
+          ))}
         </div>
       </div>
     </div>
